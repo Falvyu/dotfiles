@@ -161,6 +161,9 @@
 (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
 
 
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+
 ;; Hooks
 (add-hook 'c++-mode-hook 'irony-mode)
 
@@ -177,7 +180,7 @@
 ;;(add-hook 'objc-mode-hook 'irony-mode)
 ;;(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
 
-(require 'ecb)
+;;(require 'ecb)
 
 
 
@@ -208,7 +211,8 @@
   :ensure company
   :config
   (add-hook 'c++-mode-hook
-            (lambda () (setq company-clang-arguments '("-std=c++17")))))
+            (lambda () (setq company-clang-arguments '("")))
+             (lambda () (setq company-clang-arguments '("-std=c++17")))))
 (defun my/company-enable-dabbrev ()
   "Enable company dabbrev on demand.
 Might be useful for modes not in `company-dabbrev-code-modes'."
@@ -221,7 +225,7 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
   :hook (after-init . global-flycheck-mode)
   :config
   (add-hook 'c++-mode-hook
-(lambda () (setq flycheck-clang-language-standard "c++17"))))
+  (lambda () (setq flycheck-clang-language-standard "c++17"))))
 
 
 
@@ -248,9 +252,28 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
     :init (add-hook 'flycheck-mode-hook 'flycheck-irony-setup))
   )
 
+;; projectile configuration
+(projectile-mode +1)
+(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+
+(define-key prog-mode-map (kbd "M-RET") 'emr-show-refactor-menu)
+
 (add-hook 'prog-mode-hook 'linum-mode)
+(blink-cursor-mode 0)
+
+(defun c-mode-style-hook ()
+  ;; Set the default style
+  (setq c-default-ostyle "linux"
+        c-basic-offset 8))
+(add-hook 'c-mode-common-hook 'c-mode-style-hook)
+(add-hook 'c-mode-common-hook 'rainbow-delimiters-mode)
+(add-hook 'c-mode-common-hook 'column-enforce-mode)
 
 
+;; Org mode
+(add-hook 'org-mode-hook '(lambda () (setq fill-column 80)))
+(add-hook 'org-mode-hook 'turn-on-auto-fill)
 
 ;;; init.el ends here
 (custom-set-variables
@@ -263,7 +286,127 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
  '(inhibit-startup-screen t)
  '(package-selected-packages
    (quote
-    (google-c-style glsl-mode flycheck-irony company-irony-c-headers company-c-headers company-irony linum-relative arduino-mode 2048-game irony zop-to-char zenburn-theme which-key volatile-highlights undo-tree smartrep smartparens smart-mode-line projectile ov operate-on-number move-text magit imenu-anywhere guru-mode grizzl god-mode gitignore-mode gitconfig-mode git-timemachine gist flycheck expand-region editorconfig easy-kill discover-my-major diminish diff-hl crux browse-kill-ring beacon anzu ace-window))))
+    (company-auctex auctex column-enforce-mode rainbow-delimiters emr markdown-mode csharp-mode haskell-emacs flymd google-c-style glsl-mode flycheck-irony company-irony-c-headers company-c-headers company-irony linum-relative arduino-mode 2048-game irony zop-to-char zenburn-theme which-key volatile-highlights undo-tree smartrep smartparens smart-mode-line projectile ov operate-on-number move-text magit imenu-anywhere guru-mode grizzl god-mode gitignore-mode gitconfig-mode git-timemachine gist flycheck expand-region editorconfig easy-kill discover-my-major diminish diff-hl crux browse-kill-ring beacon anzu ace-window)))
+ '(safe-local-variable-values
+   (quote
+    ((company-clang-arguments . "-iinclude")
+     (eval let
+	   ((clang-args
+	     (quote
+	      ("-iinclude" "-icpu"))))
+	   (setq-local company-clang-arguments clang-args flycheck-clang-args clang-args))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-proje1ct-root)
+		    "headers")
+	    (concat "-I"
+		    (projectile-project-root)
+		    "source/mon")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-proje1ct-root)
+		    "include")
+	    (concat "-I"
+		    (projectile-project-root)
+		    "source/mon")))
+     (eval setq flycheck-clang-include-path
+	   (list "/home/falvyu/linux/linux-4.19.24/include/"))
+     (eval setq flycheck-clang-include-path
+	   (list "/home/falvyu/linux/linux-4.19.24/include/" "/home/falvyu/linux/linux-4.19.24/arch/x86/include/"))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat
+	     ("/home/falvyu/linux/linux-4.19.24/include/")
+	     ("/home/falvyu/linux/linux-4.19.24/arch/x86/include/"))))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat "/home/falvyu/linux/linux-4.19.24/include/" "/home/falvyu/linux/linux-4.19.24/arch/x86/include")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (("/home/falvyu/linux/linux-4.19.24/include/")
+	     ("/home/falvyu/linux/linux-4.19.24/arch/x86/include"))))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    ("/home/falvyu/linux/linux-4.19.24/include/" "/home/falvyu/linux/linux-4.19.24/arch/x86/include")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    ("/home/falvyu/linux/linux-4.19.24/include/")
+	    ("/home/falvyu/linux/linux-4.19.24/arch/x86/include")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat "/linux/v4.19.24/source/arch/x86/include:" "/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat " -I/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-project-root)
+		    " -I/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-project-root)
+		    ":/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat "/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I" "/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat
+	     (projectile-project-root)
+	     "/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-project-root)
+		    "/home/falvyu/linux/linux-4.19.24/include/")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat
+	     (projectile-project-root)
+	     "/home/falvyu/linux/linux-4.19.24/include")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-project-root)
+		    "/home/falvyu/linux/linux-4.19.24/include")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-project-root)
+		    "~/linux/linux-4.19.24/include")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat
+	     (projectile-project-root)
+	     "~/linux/linux-4.19.24/include")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-project-root)
+		    ".")))
+     (eval setq flycheck-clang-include-path
+	   (list
+	    (concat
+	     (projectile-project-root)
+	     "include")))
+     (eval setq company-clang-arguments
+	   (list
+	    (concat "-I"
+		    (projectile-project-root)
+		    "headers")
+	    (concat "-I"
+		    (projectile-project-root)
+		    "source/mon")))))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

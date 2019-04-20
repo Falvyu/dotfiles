@@ -4,4 +4,4 @@ export XKB_DEFAULT_MODEL=pc101
 export TERM=konsole
 export QT_QPA_PLATFORMTHEME=qt5ct
 
-setxkbmap fr
+setxkbmap gb

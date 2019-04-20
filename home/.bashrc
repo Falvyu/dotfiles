@@ -163,13 +163,13 @@ then
 fi
 
 # Check terminal emulator
-if [[ $TERM_EM == "terminology" ]]
-then
-    neofetch #--tycat $NEOFETCH_IMG
-    echo $TERM_EM
-else
-    neofetch # --w3m --source $NEOFETCH_IMG
-fi
+#if [[ $TERM_EM == "terminology" ]]
+#then
+#    neofetch #--tycat $NEOFETCH_IMG
+#    echo $TERM_EM
+#else
+    #neofetch # --w3m --source $NEOFETCH_IMG
+#fi
 
 
 alias mountwin="sudo mount /dev/sda5 /media/falvyu/"
@@ -186,3 +186,12 @@ function waifu2x-scale() {
 
 alias create_hotspot='bash ~/scripts/hotspot.sh'
 alias listen_tcp='bash ~/scripts/listen_tcp.sh'
+alias wget='wget --no-use-server-timestamps'
+
+
+export LD_LIBRARY_PATH="/usr/local/lib"
+
+
+# Lustre
+export LUSTRE_INSTALL='/home/falvyu/Documents/Applications/lustre-v4-III-dc-linux64'
+source $LUSTRE_INSTALL/setenv.sh
