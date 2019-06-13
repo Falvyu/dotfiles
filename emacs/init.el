@@ -144,16 +144,24 @@
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
                     (not (gnutls-available-p))))
        (proto (if no-ssl "http" "https")))
+  (when no-ssl
+    (warn "\
+Your version of Emacs does not support SSL connections,
+which is unsafe because it allows man-in-the-middle attacks.
+There are two things you can do about this warning:
+1. Install an Emacs version that does support SSL and be safe.
+2. Remove this warning from your init file so you won't see it again."))
   ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
   (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
   ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
   (when (< emacs-major-version 24)
     ;; For important compatibility libraries like cl-lib
-    (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))))
+    (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
 (package-initialize)
 
 ;; add tuareg mode for OCaml programming
 ;;(load "/home/falvyu/.opam/system/share/emacs/site-lisp/tuareg-site-file")
+
 
 ;; add rust mode for Rust programming
 (add-to-list 'load-path "/path/to/rust-mode/")
@@ -166,21 +174,11 @@
 
 ;; Hooks
 (add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+(add-hook 'objc-mode-hook 'irony-mode)
 
+(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
 
-
-
-;;(use-package irony
-;;	     :init
-;;(require 'irony)
-
-
-;;(add-hook 'c++-mode-hook 'irony-mode)
-;;(add-hook 'c-mode-hook 'irony-mode)
-;;(add-hook 'objc-mode-hook 'irony-mode)
-;;(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-
-;;(require 'ecb)
 
 
 
@@ -192,6 +190,7 @@
   :config
   (setq company-idle-delay 0.05)
   (setq company-tooltip-align-annotations t))
+
 ;; company-dabbrev-code completes in code
 ;; company-dabbrev completes in comments/strings
 (use-package company-dabbrev
@@ -206,19 +205,27 @@
   :config
   ;; (setq company-dabbrev-code-modes t)
   (setq company-dabbrev-code-everywhere t))
+
 (use-package company-clang
   :defer t
   :ensure company
   :config
   (add-hook 'c++-mode-hook
             (lambda () (setq company-clang-arguments '("")))
-             (lambda () (setq company-clang-arguments '("-std=c++17")))))
-(defun my/company-enable-dabbrev ()
-  "Enable company dabbrev on demand.
-Might be useful for modes not in `company-dabbrev-code-modes'."
-  (interactive)
-(add-to-list 'company-backends '(company-capf company-dabbrev)))
+	    (lambda () (setq company-clang-arguments '("-std=c++17")))))
 
+(use-package irony
+  :diminish irony-mode
+  :config
+  (setq irony-additional-clang-options '("-std=c++11"))
+  ;;(push 'company-irony company-backends)
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+  (add-hook 'c-mode-hook 'irony-mode)
+  (add-hook 'c++-mode-hook 'irony-mode))
+
+
+
+  
 (use-package flycheck
   :defer t
   :ensure t
@@ -227,30 +234,19 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
   (add-hook 'c++-mode-hook
   (lambda () (setq flycheck-clang-language-standard "c++17"))))
 
-
-
-(use-package irony
+(use-package flycheck-irony
   :defer t
-  ;; :init
-  ;; (add-hook 'c++-mode-hook 'irony-mode)
-  ;; (add-hook 'c-mode-hook 'irony-mode)
-  ;; LOAD IRONY MODE ON DEMAND WITH M-x irony-mode
-  :config
-  ;; make irony aware of .clang_complete or cmake
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-  ;; company version >= `0.8.4' include these commands by default
-  ;; (add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
-  (use-package company-irony
-    :defer t
-    :init (add-to-list 'company-backends 'company-irony))
-  (use-package company-irony-c-headers
-    :defer t
-    :init (add-to-list 'company-backends 'company-irony-c-headers))
-  
-  (use-package flycheck-irony
-    :defer t
-    :init (add-hook 'flycheck-mode-hook 'flycheck-irony-setup))
-  )
+  :if (locate-library "flycheck")
+  :config (flycheck-irony-setup))
+
+
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-irony))
+
+;; Integrate Irony with Flycheck
+(eval-after-load 'flycheck
+  '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+
 
 ;; projectile configuration
 (projectile-mode +1)
@@ -275,6 +271,11 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
 (add-hook 'org-mode-hook '(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
 
+;; Promela mode
+;;(add-to-list 'load-path "~/.emacs.d/promela") ; location where you cloned promela-mode
+;;(require 'promela-mode)
+;;(add-to-list 'auto-mode-alist '("\\.pml\\'" . promela-mode))
+
 ;;; init.el ends here
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -284,9 +285,10 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
  '(custom-enabled-themes (quote (tango-dark)))
  '(ecb-options-version "2.40")
  '(inhibit-startup-screen t)
+ '(irony-additional-clang-options (quote ("-Wall -Wextra")))
  '(package-selected-packages
    (quote
-    (company-auctex auctex column-enforce-mode rainbow-delimiters emr markdown-mode csharp-mode haskell-emacs flymd google-c-style glsl-mode flycheck-irony company-irony-c-headers company-c-headers company-irony linum-relative arduino-mode 2048-game irony zop-to-char zenburn-theme which-key volatile-highlights undo-tree smartrep smartparens smart-mode-line projectile ov operate-on-number move-text magit imenu-anywhere guru-mode grizzl god-mode gitignore-mode gitconfig-mode git-timemachine gist flycheck expand-region editorconfig easy-kill discover-my-major diminish diff-hl crux browse-kill-ring beacon anzu ace-window)))
+    (irony-eldoc ## mutt-mode rust-mode company-auctex auctex column-enforce-mode rainbow-delimiters emr markdown-mode csharp-mode haskell-emacs flymd google-c-style glsl-mode flycheck-irony company-irony-c-headers company-c-headers company-irony linum-relative arduino-mode 2048-game irony zop-to-char zenburn-theme which-key volatile-highlights undo-tree smartrep smartparens smart-mode-line projectile ov operate-on-number move-text magit imenu-anywhere guru-mode grizzl god-mode gitignore-mode gitconfig-mode git-timemachine gist flycheck expand-region editorconfig easy-kill discover-my-major diminish diff-hl crux browse-kill-ring beacon anzu ace-window)))
  '(safe-local-variable-values
    (quote
     ((company-clang-arguments . "-iinclude")
@@ -306,7 +308,7 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
      (eval setq company-clang-arguments
 	   (list
 	    (concat "-I"
-		    (projectile-proje1ct-root)
+		    (projectile-project-root)
 		    "include")
 	    (concat "-I"
 		    (projectile-project-root)
@@ -406,7 +408,8 @@ Might be useful for modes not in `company-dabbrev-code-modes'."
 		    "headers")
 	    (concat "-I"
 		    (projectile-project-root)
-		    "source/mon")))))))
+		    "source/mon"))))))
+ '(send-mail-function (quote smtpmail-send-it)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
