@@ -159,8 +159,18 @@ There are two things you can do about this warning:
     (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
 (package-initialize)
 
-;; add tuareg mode for OCaml programming
-;;(load "/home/falvyu/.opam/system/share/emacs/site-lisp/tuareg-site-file")
+
+;; Get the dotfile directory
+(setq dotfiles-dir (file-name-directory
+                    (or (buffer-file-name) (file-chase-links load-file-name))))
+
+(add-to-list 'load-path (concat dotfiles-dir "modules"))
+
+
+;; C/C++ configurations
+(require 'c-common)
+(require 'fira-code-mode)
+
 
 
 ;; add rust mode for Rust programming
@@ -171,105 +181,32 @@ There are two things you can do about this warning:
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
+(scroll-bar-mode -1)
+
+(require 'doom-modeline)
+(doom-modeline-mode 1)
 
 ;; Hooks
-(add-hook 'c++-mode-hook 'irony-mode)
-(add-hook 'c-mode-hook 'irony-mode)
 (add-hook 'objc-mode-hook 'irony-mode)
 
 (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
 
 
-
-
-(use-package company
-  :defer t
-  :ensure t
-  :diminish company-mode
-  :hook (after-init . global-company-mode)
-  :config
-  (setq company-idle-delay 0.05)
-  (setq company-tooltip-align-annotations t))
-
-;; company-dabbrev-code completes in code
-;; company-dabbrev completes in comments/strings
-(use-package company-dabbrev
-  :defer t
-  :ensure company
-  :config
-  (setq company-dabbrev-downcase nil)
-  (setq company-dabbrev-ignore-case t))
-(use-package company-dabbrev-code
-  :defer t
-  :ensure company
-  :config
-  ;; (setq company-dabbrev-code-modes t)
-  (setq company-dabbrev-code-everywhere t))
-
-(use-package company-clang
-  :defer t
-  :ensure company
-  :config
-  (add-hook 'c++-mode-hook
-            (lambda () (setq company-clang-arguments '("")))
-	    (lambda () (setq company-clang-arguments '("-std=c++17")))))
-
-(use-package irony
-  :diminish irony-mode
-  :config
-  (setq irony-additional-clang-options '("-std=c++11"))
-  ;;(push 'company-irony company-backends)
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-  (add-hook 'c-mode-hook 'irony-mode)
-  (add-hook 'c++-mode-hook 'irony-mode))
-
-
-
-  
-(use-package flycheck
-  :defer t
-  :ensure t
-  :hook (after-init . global-flycheck-mode)
-  :config
-  (add-hook 'c++-mode-hook
-  (lambda () (setq flycheck-clang-language-standard "c++17"))))
-
-(use-package flycheck-irony
-  :defer t
-  :if (locate-library "flycheck")
-  :config (flycheck-irony-setup))
-
-
-(eval-after-load 'company
-  '(add-to-list 'company-backends 'company-irony))
-
-;; Integrate Irony with Flycheck
-(eval-after-load 'flycheck
-  '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
-
-
-;; projectile configuration
-(projectile-mode +1)
-(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-
-(define-key prog-mode-map (kbd "M-RET") 'emr-show-refactor-menu)
-
 (add-hook 'prog-mode-hook 'linum-mode)
+
+;; (add-hook 'prog-mode-hook 'treemacs)
+
+;; Remove blinking cursor
 (blink-cursor-mode 0)
 
-(defun c-mode-style-hook ()
-  ;; Set the default style
-  (setq c-default-ostyle "linux"
-        c-basic-offset 8))
-(add-hook 'c-mode-common-hook 'c-mode-style-hook)
-(add-hook 'c-mode-common-hook 'rainbow-delimiters-mode)
-(add-hook 'c-mode-common-hook 'column-enforce-mode)
 
 
 ;; Org mode
 (add-hook 'org-mode-hook '(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
+
+
+
 
 ;; Promela mode
 ;;(add-to-list 'load-path "~/.emacs.d/promela") ; location where you cloned promela-mode
@@ -282,13 +219,18 @@ There are two things you can do about this warning:
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes (quote (tango-dark)))
+ '(custom-enabled-themes (quote (gruvbox-dark-soft)))
+ '(custom-safe-themes
+   (quote
+    ("939ea070fb0141cd035608b2baabc4bd50d8ecc86af8528df9d41f4d83664c6a" "8e797edd9fa9afec181efbfeeebf96aeafbd11b69c4c85fa229bb5b9f7f7e66c" "8f97d5ec8a774485296e366fdde6ff5589cf9e319a584b845b6f7fa788c9fa9a" "a22f40b63f9bc0a69ebc8ba4fbc6b452a4e3f84b80590ba0a92b4ff599e53ad0" "585942bb24cab2d4b2f74977ac3ba6ddbd888e3776b9d2f993c5704aa8bb4739" "1436d643b98844555d56c59c74004eb158dc85fc55d2e7205f8d9b8c860e177f" default)))
+ '(doom-modeline-bar-width 4)
  '(ecb-options-version "2.40")
+ '(global-magit-file-mode nil)
  '(inhibit-startup-screen t)
  '(irony-additional-clang-options (quote ("-Wall -Wextra")))
  '(package-selected-packages
    (quote
-    (irony-eldoc ## mutt-mode rust-mode company-auctex auctex column-enforce-mode rainbow-delimiters emr markdown-mode csharp-mode haskell-emacs flymd google-c-style glsl-mode flycheck-irony company-irony-c-headers company-c-headers company-irony linum-relative arduino-mode 2048-game irony zop-to-char zenburn-theme which-key volatile-highlights undo-tree smartrep smartparens smart-mode-line projectile ov operate-on-number move-text magit imenu-anywhere guru-mode grizzl god-mode gitignore-mode gitconfig-mode git-timemachine gist flycheck expand-region editorconfig easy-kill discover-my-major diminish diff-hl crux browse-kill-ring beacon anzu ace-window)))
+    (flycheck-clang-analyzer z3-mode graphviz-dot-mode haskell-mode dot-mode all-the-icons-gnus doom-modeline flycheck-rust gruvbox-theme treemacs yasnippet-classic-snippets yasnippet-snippets yasnippet markdown-preview-mode markdown-mode+ docker cuda-mode irony-eldoc ## mutt-mode rust-mode company-auctex auctex column-enforce-mode rainbow-delimiters emr markdown-mode csharp-mode haskell-emacs flymd google-c-style glsl-mode flycheck-irony company-irony-c-headers company-c-headers company-irony linum-relative arduino-mode 2048-game zop-to-char zenburn-theme which-key volatile-highlights undo-tree smartrep smartparens smart-mode-line projectile ov operate-on-number move-text magit imenu-anywhere guru-mode grizzl god-mode gitignore-mode gitconfig-mode git-timemachine gist flycheck expand-region editorconfig easy-kill discover-my-major diminish diff-hl crux browse-kill-ring beacon anzu ace-window)))
  '(safe-local-variable-values
    (quote
     ((company-clang-arguments . "-iinclude")
@@ -409,13 +351,14 @@ There are two things you can do about this warning:
 	    (concat "-I"
 		    (projectile-project-root)
 		    "source/mon"))))))
- '(send-mail-function (quote smtpmail-send-it)))
+ '(send-mail-function (quote smtpmail-send-it))
+ '(treemacs-git-mode (quote extended)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(magit-branch-current ((t (:inherit magit-branch-local :underline "#83a598")))))
 
 
 
